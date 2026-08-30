@@ -18,7 +18,7 @@ A full-stack, production-ready anonymous messaging platform that allows users to
 
 <br>
 
-[![Live Demo](https://img.shields.io/badge/LIVE_DEMO-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://saraha-anonymous-messages-platform.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/LIVE_DEMO-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://saraha-anonymous-messages-platform-taupe.vercel.app/)
 
 ![Status](https://img.shields.io/badge/Status-Completed-2ea44f?style=for-the-badge)
 ![Version](https://img.shields.io/badge/Version-1.0.0-blue?style=for-the-badge)
@@ -32,7 +32,7 @@ A full-stack, production-ready anonymous messaging platform that allows users to
 
 Experience the production-ready application without installing anything locally:
 
-### **[https://saraha-anonymous-messages-platform.vercel.app/](https://saraha-anonymous-messages-platform.vercel.app/)**
+### **[https://saraha-anonymous-messages-platform-taupe.vercel.app/](https://saraha-anonymous-messages-platform-taupe.vercel.app/)**
 
 ---
 
@@ -196,7 +196,7 @@ This project is currently hosted and live on Vercel.
 For your own deployment, the frontend static files (in `/public`) are compatible with any static hosting service (Vercel, Netlify). However, because it utilizes a Node.js/Express backend, deployment to serverless platforms like Vercel or Render will require proper backend configuration (e.g., setting up the server as a serverless function or using a dedicated Node.js hosting plan).
 
 ### 🔗 Live URL
-**[https://saraha-anonymous-messages-platform.vercel.app/](https://saraha-anonymous-messages-platform.vercel.app/)**
+**[https://saraha-anonymous-messages-platform-taupe.vercel.app/](https://saraha-anonymous-messages-platform-taupe.vercel.app/)**
 
 ---
 
