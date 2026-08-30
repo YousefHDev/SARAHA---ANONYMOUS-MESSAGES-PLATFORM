@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Settings - Saraha</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="/index.html" class="brand-logo"><span class="brand-icon">🔒</span> Saraha</a>
+      <ul class="nav-menu" id="nav-menu"></ul>
+    </div>
+  </nav>
+
+  <main class="main-container" style="max-width: 700px; padding-top: 2rem;">
+    <h2 style="margin-bottom: 0.5rem;">Profile Settings ⚙️</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 2rem;">Manage your public handle, bio, and profile picture avatar.</p>
+
+    <!-- Avatar Upload Section -->
+    <div class="card" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
+      <div style="position: relative;">
+        <img id="avatar-preview" src="/uploads/default-avatar.svg" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-color);">
+      </div>
+
+      <div style="flex: 1;">
+        <h4 style="margin-bottom: 0.5rem;">Profile Picture</h4>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Supports JPG, PNG, WEBP, or GIF under 5MB (Uploaded via Multer middleware).</p>
+        
+        <form id="avatar-form" style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+          <input type="file" id="avatar-file" accept="image/*" style="display: none;">
+          <button type="button" id="choose-file-btn" class="btn btn-secondary btn-sm">Choose New Photo</button>
+          <button type="submit" id="upload-avatar-btn" class="btn btn-primary btn-sm" disabled>Upload Photo</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Profile Details Form -->
+    <div class="card">
+      <h3 style="margin-bottom: 1.5rem;">General Information</h3>
+
+      <form id="profile-details-form">
+        <div class="form-group">
+          <label class="form-label">Username Handle (Read Only)</label>
+          <input type="text" id="username-display" class="form-control" disabled style="opacity: 0.7;">
+          <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+            Your handle link: <code id="user-link-display">https://saraha.local/send.html?u=...</code>
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="name-input">Display Name</label>
+          <input type="text" id="name-input" class="form-control" placeholder="Your name">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email-input">Email Address</label>
+          <input type="email" id="email-input" class="form-control" placeholder="your.email@example.com">
+          <div id="email-status" style="margin-top: 0.35rem; font-size: 0.8rem;"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="bio-input">Public Bio / Intro</label>
+          <textarea id="bio-input" class="form-control" placeholder="Write a short message inviting people to leave feedback..." maxlength="250"></textarea>
+        </div>
+
+        <!-- Regex Handle Availability Checker Utility -->
+        <div class="card" style="background: var(--bg-input); padding: 1.25rem; margin-bottom: 1.5rem; border-color: var(--border-color-highlight);">
+          <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem;">🔍 Check Custom Handle Availability (Regex Tool)</h4>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Test any desired handle availability against our server Regex validator endpoint.</p>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="test-handle-input" class="form-control" placeholder="e.g. superhero" style="font-size: 0.85rem; padding: 0.6rem 0.9rem;">
+            <button type="button" id="test-handle-btn" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Check Regex</button>
+          </div>
+          <div id="test-handle-result" style="margin-top: 0.5rem; font-size: 0.85rem; font-weight: 500;"></div>
+        </div>
+
+        <button type="submit" id="save-profile-btn" class="btn btn-primary btn-block">Save Changes</button>
+      </form>
+    </div>
+  </main>
+
+  <script type="module" src="/js/app.js"></script>
+  <script type="module">
+    import { apiFetch, getUser, setUser, showToast } from '/js/app.js';
+
+    const currentUser = getUser();
+    if (!currentUser) {
+      window.location.href = '/login.html';
+    }
+
+    // Populate initial form values
+    const avatarPreview = document.getElementById('avatar-preview');
+    const usernameDisplay = document.getElementById('username-display');
+    const linkDisplay = document.getElementById('user-link-display');
+    const nameInput = document.getElementById('name-input');
+    const emailInput = document.getElementById('email-input');
+    const bioInput = document.getElementById('bio-input');
+    const emailStatus = document.getElementById('email-status');
+
+    if (currentUser) {
+      avatarPreview.src = currentUser.avatar || '/uploads/default-avatar.svg';
+      usernameDisplay.value = currentUser.username;
+      linkDisplay.innerText = `${window.location.origin}/send.html?u=${currentUser.username}`;
+      nameInput.value = currentUser.name || '';
+      emailInput.value = currentUser.email || '';
+      bioInput.value = currentUser.bio || '';
+
+      emailStatus.innerHTML = currentUser.isConfirmed 
+        ? '<span style="color: #10b981;">✓ Email Confirmed</span>' 
+        : '<span style="color: #f59e0b;">⚠️ Email Pending Confirmation</span>';
+    }
+
+    // Avatar upload logic
+    const chooseFileBtn = document.getElementById('choose-file-btn');
+    const fileInput = document.getElementById('avatar-file');
+    const uploadAvatarBtn = document.getElementById('upload-avatar-btn');
+    const avatarForm = document.getElementById('avatar-form');
+
+    chooseFileBtn?.addEventListener('click', () => fileInput.click());
+
+    fileInput?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        avatarPreview.src = URL.createObjectURL(file);
+        uploadAvatarBtn.disabled = false;
+      }
+    });
+
+    avatarForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      uploadAvatarBtn.disabled = true;
+      uploadAvatarBtn.innerText = 'Uploading...';
+
+      try {
+        const res = await apiFetch('/user/avatar', {
+          method: 'POST',
+          body: formData
+        });
+
+        setUser(res.data.user);
+        showToast('Avatar picture updated successfully!', 'success');
+        uploadAvatarBtn.disabled = true;
+        uploadAvatarBtn.innerText = 'Upload Photo';
+      } catch (err) {
+        showToast(err.message || 'Avatar upload failed', 'error');
+        uploadAvatarBtn.disabled = false;
+        uploadAvatarBtn.innerText = 'Upload Photo';
+      }
+    });
+
+    // Profile Details Submit
+    const detailsForm = document.getElementById('profile-details-form');
+    const saveBtn = document.getElementById('save-profile-btn');
+
+    detailsForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim();
+      const bio = bioInput.value.trim();
+
+      saveBtn.disabled = true;
+      saveBtn.innerText = 'Saving...';
+
+      try {
+        const res = await apiFetch('/user/profile', {
+          method: 'PUT',
+          body: JSON.stringify({ name, email, bio })
+        });
+
+        setUser(res.data.user);
+        showToast('Profile updated successfully!', 'success');
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save Changes';
+      } catch (err) {
+        showToast(err.message || 'Profile update failed', 'error');
+        saveBtn.disabled = false;
+        saveBtn.innerText = 'Save Changes';
+      }
+    });
+
+    // Test Handle Regex Tool
+    const testBtn = document.getElementById('test-handle-btn');
+    const testInput = document.getElementById('test-handle-input');
+    const testResult = document.getElementById('test-handle-result');
+
+    testBtn?.addEventListener('click', async () => {
+      const handle = testInput.value.trim();
+      if (!handle) return;
+
+      testResult.innerText = 'Testing regex server check...';
+      try {
+        const res = await apiFetch(`/user/check-username?username=${encodeURIComponent(handle)}`);
+        if (res.available) {
+          testResult.innerHTML = `<span style="color: #10b981;">✓ "${handle}" is available and passes regex checks!</span>`;
+        } else {
+          testResult.innerHTML = `<span style="color: #ef4444;">✗ "${handle}" is taken or invalid.</span>`;
+        }
+      } catch (err) {
+        testResult.innerText = err.message;
+      }
+    });
+  </script>
+</body>
+</html>

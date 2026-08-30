@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saraha - Anonymous Messages Platform</title>
+  <meta name="description" content="Send and receive honest, constructive feedback anonymously with total privacy and security.">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="/index.html" class="brand-logo">
+        <span class="brand-icon">🔒</span> Saraha
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <!-- Rendered dynamically by app.js -->
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-container">
+    <section class="hero-section">
+      <div class="hero-badge">
+        <span>✨ 100% Secure & Confidential</span>
+      </div>
+      <h1 class="hero-title">
+        Get Honest Feedback <br>
+        <span class="gradient-text">Completely Anonymously</span>
+      </h1>
+      <p class="hero-subtitle">
+        Saraha empowers you to hear genuine thoughts, secret compliments, and constructive feedback from friends, colleagues, and followers without revealing their identity.
+      </p>
+
+      <!-- Live Search User Box -->
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="user-search-input" class="search-input" placeholder="Type a handle to send an anonymous message (e.g. @john)..." autocomplete="off">
+        <div id="search-results" class="search-results"></div>
+      </div>
+
+      <div class="hero-buttons">
+        <a href="/signup.html" class="btn btn-primary">Create Your Anonymous Link</a>
+        <a href="/token-info.html" class="btn btn-secondary">Learn About Bearer Tokens 🛡️</a>
+      </div>
+    </section>
+
+    <!-- Platform Highlights Grid -->
+    <section class="features-grid">
+      <div class="card feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3 class="feature-title">End-to-End Privacy</h3>
+        <p class="feature-desc">All messages are delivered anonymously. Optional Crypto-JS encryption ensures total message payload safety.</p>
+      </div>
+
+      <div class="card feature-card">
+        <div class="feature-icon">📌</div>
+        <h3 class="feature-title">Freeze & Star Messages</h3>
+        <p class="feature-desc">Pin your favorite anonymous notes or freeze important memories directly at the top of your dashboard grid.</p>
+      </div>
+
+      <div class="card feature-card">
+        <div class="feature-icon">🎨</div>
+        <h3 class="feature-title">Night & Morning Themes</h3>
+        <p class="feature-desc">Seamlessly toggle between sleek Dark (Night) and vibrant Light (Morning) mode themes anytime.</p>
+      </div>
+
+      <div class="card feature-card">
+        <div class="feature-icon">📸</div>
+        <h3 class="feature-title">Shareable Card Generator</h3>
+        <p class="feature-desc">Convert anonymous messages into beautiful visual quote cards ready for sharing on social media.</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/app.js"></script>
+  <script type="module">
+    import { apiFetch } from '/js/app.js';
+
+    const searchInput = document.getElementById('user-search-input');
+    const searchResults = document.getElementById('search-results');
+
+    let debounceTimer;
+    searchInput?.addEventListener('input', (e) => {
+      clearTimeout(debounceTimer);
+      const query = e.target.value.trim().replace(/^@/, '');
+
+      if (!query) {
+        searchResults.classList.remove('active');
+        return;
+      }
+
+      debounceTimer = setTimeout(async () => {
+        try {
+          const res = await apiFetch(`/user/search?q=${encodeURIComponent(query)}`);
+          const users = res.data.users || [];
+
+          if (users.length === 0) {
+            searchResults.innerHTML = `<div style="padding: 1rem; color: var(--text-muted); text-align: center;">No user found matching "@${query}"</div>`;
+          } else {
+            searchResults.innerHTML = users.map(u => `
+              <div class="search-item" onclick="window.location.href='/send.html?u=${u.username}'">
+                <img src="${u.avatar}" class="search-item-avatar" alt="${u.username}">
+                <div class="search-item-info">
+                  <div class="search-item-name">${u.name || u.username}</div>
+                  <div class="search-item-handle">@${u.username}</div>
+                </div>
+                <span style="font-size: 0.85rem; color: var(--primary-color);">Send 💌</span>
+              </div>
+            `).join('');
+          }
+          searchResults.classList.add('active');
+        } catch (err) {
+          console.error(err);
+        }
+      }, 300);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.classList.remove('active');
+      }
+    });
+  </script>
+</body>
+</html>

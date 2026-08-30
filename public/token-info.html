@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is a Token? - Saraha Security</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="/index.html" class="brand-logo"><span class="brand-icon">🔒</span> Saraha</a>
+      <ul class="nav-menu" id="nav-menu"></ul>
+    </div>
+  </nav>
+
+  <main class="main-container" style="max-width: 900px; padding-top: 2.5rem;">
+    
+    <div style="text-align: center; margin-bottom: 3rem;">
+      <div class="hero-badge">
+        <span>🛡️ Security & Authentication Architecture</span>
+      </div>
+      <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">
+        What is a <span class="gradient-text">JWT Bearer Token</span>?
+      </h1>
+      <p style="color: var(--text-secondary); max-width: 650px; margin: 0 auto; font-size: 1.05rem;">
+        Discover how Saraha protects your identity and secures private inbox requests using JSON Web Tokens (JWT) and HTTP Bearer headers.
+      </p>
+    </div>
+
+    <!-- Educational Breakdown Grid -->
+    <div class="features-grid" style="margin-bottom: 3rem;">
+      <div class="card">
+        <h3 style="color: #6366f1; margin-bottom: 0.5rem;">1. Header (Algorithm & Type)</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+          Specifies the hashing algorithm used to sign the token (e.g. <code>HS256</code>) and the token type (<code>JWT</code>).
+        </p>
+      </div>
+
+      <div class="card">
+        <h3 style="color: #ec4899; margin-bottom: 0.5rem;">2. Payload (User Claims)</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+          Contains non-sensitive identity claims such as user ID, issued timestamp (<code>iat</code>), and expiration (<code>exp</code>).
+        </p>
+      </div>
+
+      <div class="card">
+        <h3 style="color: #10b981; margin-bottom: 0.5rem;">3. Signature (HMAC Security)</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+          Generated using the secret key on the server (`JWT_SECRET`). Guarantees the token cannot be tampered with.
+        </p>
+      </div>
+    </div>
+
+    <!-- Interactive JWT Token Inspector Widget -->
+    <div class="card" style="margin-bottom: 3rem;">
+      <h3 style="margin-bottom: 0.5rem;">🔍 Interactive JWT Inspector</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Inspect your current session JWT Bearer token or paste any valid JWT token below to decode its structure in real-time.
+      </p>
+
+      <div class="form-group">
+        <label class="form-label" for="token-input">Bearer Token String</label>
+        <textarea id="token-input" class="form-control" style="min-height: 90px; font-family: monospace; font-size: 0.85rem;" placeholder="Paste JWT token here (e.g., eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...)"></textarea>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; margin-bottom: 2rem;">
+        <button id="inspect-btn" class="btn btn-primary btn-sm">Decode Token Claims ⚡</button>
+        <button id="load-my-token-btn" class="btn btn-secondary btn-sm">Load Active Session Token</button>
+      </div>
+
+      <!-- Inspection Results -->
+      <div id="inspector-output" style="display: none; display: flex; flex-direction: column; gap: 1.25rem;">
+        <div style="background: var(--bg-input); padding: 1.25rem; border-radius: var(--radius-md); border-left: 4px solid #6366f1;">
+          <h4 style="color: #6366f1; font-size: 0.9rem; margin-bottom: 0.5rem;">HEADER</h4>
+          <pre id="output-header" style="font-family: monospace; font-size: 0.85rem; color: var(--text-primary); overflow-x: auto;"></pre>
+        </div>
+
+        <div style="background: var(--bg-input); padding: 1.25rem; border-radius: var(--radius-md); border-left: 4px solid #ec4899;">
+          <h4 style="color: #ec4899; font-size: 0.9rem; margin-bottom: 0.5rem;">PAYLOAD</h4>
+          <pre id="output-payload" style="font-family: monospace; font-size: 0.85rem; color: var(--text-primary); overflow-x: auto;"></pre>
+        </div>
+
+        <div style="background: var(--bg-input); padding: 1.25rem; border-radius: var(--radius-md); border-left: 4px solid #10b981;">
+          <h4 style="color: #10b981; font-size: 0.9rem; margin-bottom: 0.5rem;">VERIFICATION & EXPIRATION</h4>
+          <div id="output-meta" style="font-size: 0.85rem; color: var(--text-secondary);"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script type="module" src="/js/app.js"></script>
+  <script type="module">
+    import { getToken, showToast } from '/js/app.js';
+
+    const tokenInput = document.getElementById('token-input');
+    const inspectBtn = document.getElementById('inspect-btn');
+    const loadMyTokenBtn = document.getElementById('load-my-token-btn');
+
+    const outputContainer = document.getElementById('inspector-output');
+    const outputHeader = document.getElementById('output-header');
+    const outputPayload = document.getElementById('output-payload');
+    const outputMeta = document.getElementById('output-meta');
+
+    // Auto-load token if user logged in
+    const activeToken = getToken();
+    if (activeToken) {
+      tokenInput.value = activeToken;
+      decodeToken(activeToken);
+    }
+
+    loadMyTokenBtn.addEventListener('click', () => {
+      const tok = getToken();
+      if (!tok) {
+        showToast('No active session token found. Please log in first.', 'error');
+        return;
+      }
+      tokenInput.value = tok;
+      decodeToken(tok);
+    });
+
+    inspectBtn.addEventListener('click', () => {
+      const tok = tokenInput.value.trim();
+      if (!tok) {
+        showToast('Please paste a valid JWT token string.', 'error');
+        return;
+      }
+      decodeToken(tok);
+    });
+
+    function decodeToken(token) {
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+          throw new Error('Invalid JWT token structure. A JWT must consist of 3 dot-separated parts.');
+        }
+
+        const header = JSON.parse(atob(parts[0]));
+        const payload = JSON.parse(atob(parts[1]));
+
+        outputHeader.innerText = JSON.stringify(header, null, 2);
+        outputPayload.innerText = JSON.stringify(payload, null, 2);
+
+        let expText = 'No expiration defined';
+        if (payload.exp) {
+          const expDate = new Date(payload.exp * 1000);
+          const isExpired = Date.now() > payload.exp * 1000;
+          expText = `Expires: ${expDate.toLocaleString()} (${isExpired ? '<strong style="color:#ef4444">EXPIRED</strong>' : '<strong style="color:#10b981">VALID SESSION</strong>'})`;
+        }
+
+        outputMeta.innerHTML = `
+          <div><strong>Algorithm:</strong> ${header.alg || 'HS256'}</div>
+          <div><strong>Subject ID:</strong> ${payload.id || 'N/A'}</div>
+          <div>${expText}</div>
+          <div style="margin-top: 0.5rem; color: #10b981;">✓ Valid JWT payload structure parsed!</div>
+        `;
+
+        outputContainer.style.display = 'flex';
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>
